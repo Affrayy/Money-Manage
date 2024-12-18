@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Manajemen Keuangan </title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #44713a;
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        input, select {
+            padding: 10px;
+            margin: 5px 0;
+            width: calc(100% - 22px);
+            border: 1px solid #beff6f;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+        .summary {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+        }
+        .summary p {
+            margin: 5px 0;
+        }
+        .summary span {
+            font-weight: bold;
+        }
+        .delete-button {
+            background-color: #dc3545;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .delete-button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Website Manajemen Keuangan </h1>
+        <h2>Tambah Transaksi</h2>
+        <input type="text" id="description" placeholder="Deskripsi" required>
+        <input type="number" id="amount" placeholder="Jumlah" required>
+        <select id="type">
+            <option value="income">Pendapatan</option>
+            <option value="expense">Pengeluaran</option>
+        </select>
+        <button onclick="addTransaction()">Tambah Transaksi</button>
+
+        <h2>Daftar Transaksi</h2>
+        <table id="transactionTable">
+            <thead>
+                <tr>
+                    <th>Deskripsi</th>
+                    <th>Jumlah</th>
+                    <th>Tipe</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <div class="summary">
+            <h2>Ringkasan Keuangan</h2>
+            <p>Total Pendapatan: <span id="totalIncome">0</span></p>
+            <p>Total Pengeluaran: <span id="totalExpense">0</span></p>
+            <p>Saldo: <span id="balance">0</span></p>
+        </div>
+    </div>
+
+    <script>
+        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+
+        function addTransaction() {
+            const description = document.getElementById('description').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const type = document.getElementById('type').value;
+
+            if (description && !isNaN(amount)) {
+                const transaction = { description, amount, type };
+                transactions.push(transaction);
+                localStorage.setItem('transactions', JSON.stringify(transactions));
+                updateTable();
+                updateSummary();
+                clearInputs();
+            } else {
+                alert('Silakan masukkan deskripsi dan jumlah yang valid.');
+            }
+        }
+
+        function updateTable() {
+            const tbody = document.querySelector('#transactionTable tbody');
+            tbody.innerHTML = '';
+            transactions.forEach((transaction, index) => {
+                const row = `<tr>
+                    <td>${transaction.description}</td>
+                    <td>${transaction.amount.toFixed(2)}</td>
+                    <td>${transaction.type === 'income' ? 'Pendapatan' : 'Pengeluaran'}</td>
+                    <td><button class="delete-button" onclick="deleteTransaction(${index})">Hapus</button></td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function updateSummary() {
+            const totalIncome = transactions
+                .filter(t => t.type === 'income')
+                .reduce((sum, t) => sum + t.amount, 0);
+            const totalExpense = transactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + t.amount, 0);
+            const balance = totalIncome - totalExpense;
+
+            document.getElementById('totalIncome').innerText = totalIncome.toFixed(2);
+            document.getElementById('totalExpense').innerText = totalExpense.toFixed(2);
+            document.getElementById('balance').innerText = balance.toFixed(2);
+        }
+
+        function clearInputs() {
+            document.getElementById('description').value = '';
+            document.getElementById('amount').value = '';
+            document.getElementById('type').value = 'income';
+        }
+
+        function deleteTransaction(index) {
+            transactions.splice(index, 1);
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            updateTable();
+            updateSummary();
+        }
+
+        // Inisialisasi tabel dan ringkasan saat halaman dimuat
+        window.onload = function() {
+            updateTable();
+            updateSummary();
+        };
+    </script>
+</body>
+</html>
